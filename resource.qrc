@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>logo3.png</file>
+        <file alias="searchW.png">images/icons/ic_search_white_24dp_1x.png</file>
+        <file alias="insertW.png">images/icons/ic_insert_drive_file_white_24dp_1x.png</file>
+        <file alias="saveW.png">images/icons/ic_get_app_white_24dp_1x.png</file>
+        <file alias="clearW.png">images/icons/ic_clear_white_24dp_1x.png</file>
+        <file alias="flipW.png">images/icons/ic_flip_white_24dp_1x.png</file>
+        <file alias="markerStart.png">images/icons/markerStart.png</file>
+        <file alias="markerEndStart.png">images/icons/markerEndStart.png</file>
+        <file alias="markerEnd.png">images/icons/markerEnd.png</file>
+    </qresource>
+    <qresource prefix="/brands">
+        <file alias="shotmanager.png">images/brands/shotmanager.png</file>
+        <file alias="unimore.png">images/brands/unimore.png</file>
+    </qresource>
+</RCC>
