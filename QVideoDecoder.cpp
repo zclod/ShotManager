@@ -122,7 +122,8 @@ void QVideoDecoder::InitVars()
 void QVideoDecoder::close()
 {
 	/*if(!ok)
-		return;*/
+		return;	*/
+
 	flushed = false;
 
 	// Free the RGB image
