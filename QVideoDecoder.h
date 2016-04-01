@@ -94,6 +94,8 @@ class QVideoDecoder
 		qint64					currentFrame;
 		qint64					baseFrameNumber;
 		qint64					lastDecodedFrame;
+		qint64					maxFrameNumber;
+		qint64					maxCurrentFrameNumber;
 
 		double					baseFrameRate; //!< fps (theorycal)
 		double					baseFRateReal; //!< fps (real)
@@ -106,6 +108,7 @@ class QVideoDecoder
 		AVRational		millisecondbase; //!< wanted base time reference
 
 		// State infos
+		bool flushed;
 		bool ok;
 		bool LastFrameOk; //!< last frame is valid
 		QImage LastFrame;
@@ -117,15 +120,19 @@ class QVideoDecoder
 		void initCodec();
 		void InitVars();
 		bool getFirstPacketInformation();
-		bool AV_read_frame();
+
+		qint64 getInternalFrameNumber(qint64 idealFrameNumber);
+		qint64 getExternalFrameNumber(qint64 internalFrameNumber);		
 
 		// Seek
 		//virtual bool decodeSeekFrame(const qint64 idealFrameNumber);
 		virtual bool decodeSeekFrame(const qint64 idealFrame);
 		virtual bool correctSeekToKeyFrame(const qint64 idealFrameNumber);
-		virtual bool seekFrameCorrect(const qint64 frame, const qint64 delta = 150);
+		virtual bool seekFrameCorrect(const qint64 internalFrame, const qint64 delta = 150);
+		bool AV_read_frame();
 
 		// Helpers
+		virtual void convertFrame();
 		virtual void dumpFormat(const int is_output);
 		virtual void saveFramePPM(const AVFrame *pFrame, const int width, const int height, const int iFrame);
 
@@ -137,7 +144,7 @@ class QVideoDecoder
 
 		virtual bool openFile(const QString file);
 		virtual void close();
-		void flush();
+		bool flush(const int num = -1);
 
 		
 		virtual bool getFrame(QImage&img, qint64 *frameNum = 0, qint64 *frameTime = 0);

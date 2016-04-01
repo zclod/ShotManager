@@ -517,9 +517,11 @@ void MainWindow::on_seekFrameBtn_clicked()
 
 	// Ask for the frame number
 	bool ok;
+	QString sFrameNumber = "Frame number: (Max=" + QString::number(_playerWidg->getNumFrames() - 1) + ")";
+	
 	int frameNum = QInputDialog::getInt(
 		this,
-		tr("Seek to frame"), tr("Frame number:"),
+		tr("Seek to frame"), tr(sFrameNumber.toStdString().c_str()),
 		0, 0, _playerWidg->getNumFrames() - 1, 1,
 		&ok
 	);

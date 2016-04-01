@@ -102,6 +102,7 @@ void QVideoDecoder::initCodec()
 void QVideoDecoder::InitVars()
 {
 	ok=false;
+	flushed = false;
 	pFormatCtx = avformat_alloc_context();
 	pCodecCtx = 0;
 	pCodec=0;
@@ -110,6 +111,8 @@ void QVideoDecoder::InitVars()
 	buffer=0;
 	img_convert_ctx=0;
 	millisecondbase = { 1, 1000 };
+	maxFrameNumber = 0;
+	maxCurrentFrameNumber = 0;
 }
 
 /*! \brief Close the file and reset all variables
@@ -120,11 +123,13 @@ void QVideoDecoder::close()
 {
 	/*if(!ok)
 		return;*/
+	flushed = false;
 
 	// Free the RGB image
-	if(buffer)
-		delete [] buffer;
-
+	if (buffer)
+		// delete [] buffer;
+		av_free(buffer);
+		
 	// Free the YUV frame
 	if(pFrame)
 		//av_free(pFrame);
@@ -184,8 +189,9 @@ bool QVideoDecoder::openFile(const QString filename)
 	LastIdealFrameNumber = 0;
 	LastFrameOk = false;*/
 	lastDecodedFrame = 0;
-
-
+	maxFrameNumber = 0;
+	maxCurrentFrameNumber = 0;
+	
 	if (avformat_open_input(&pFormatCtx, filename.toStdString().c_str(), NULL, NULL) != 0){
 		printf("Couldn't open input stream.\n");
 		return -1;
@@ -218,9 +224,7 @@ bool QVideoDecoder::openFile(const QString filename)
 	}
 
 	init_frames();
-	getFirstPacketInformation();
-	//AV_read_frame();
-
+	
 	// Set variables
 	// this is the part added from other students
 	path			= filename;
@@ -241,28 +245,42 @@ bool QVideoDecoder::openFile(const QString filename)
 	timeBase		= av_q2d(timeBaseRat);
 	w				= pCodecCtx->width;
 	h				= pCodecCtx->height;
-
+	
 	ok = true;
 	dumpFormat(0);
+
+	
+	
+	getFirstPacketInformation();
+	//AV_read_frame();
+
+	maxFrameNumber = getNumFrames();
+	maxCurrentFrameNumber = getInternalFrameNumber(maxFrameNumber);
 
 	return true;
 }
 
 
-void QVideoDecoder::flush(){
+bool QVideoDecoder::flush(const int num){
 	//flush decoder
 	//FIX: Flush Frames remained in Codec
+	int64_t fNum = num;
 	int ret, got_picture;
-	while (packet->stream_index == videoStreamIndex) {
+	flushed = true;
+	while (packet->stream_index == videoStreamIndex && (num < 0 || fNum>0)) {
 		ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
 		if (ret < 0)
-			break;
+			return false;
 		if (!got_picture)
-			break;
+			return false;;
 
+		--fNum;
+
+		convertFrame();
 		// printf("Flush Decoder: Succeed to decode 1 frame!\n");
 		av_packet_unref(packet);
 	}
+	return true;
 }
 
 
@@ -300,25 +318,7 @@ bool QVideoDecoder::getFirstPacketInformation()
 				done = true;
 
 				// Convert and save the frame
-				img_convert_ctx = sws_getCachedContext(
-					img_convert_ctx, pCodecCtx->width, pCodecCtx->height,
-					pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height,
-					AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL
-					);
-
-				if (img_convert_ctx == NULL) {
-					qDebug() << "Cannot initialize the conversion context!";
-					return false;
-				}
-				sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
-
-				LastFrame = QImage(pCodecCtx->width, pCodecCtx->height, QImage::Format_RGB888);
-
-				for (int y = 0; y < pCodecCtx->height; y++)
-					memcpy(LastFrame.scanLine(y), pFrameRGB->data[0] + y * pFrameRGB->linesize[0], pCodecCtx->width * 3);
-
-				currentFrame = av_frame_get_best_effort_timestamp(pFrame);
-				lastDecodedFrame = currentFrame;
+				convertFrame();
 
 				if (pFormatCtx->streams[videoStreamIndex]->first_dts == AV_NOPTS_VALUE) {
 					/*	TODO: I could not find any solution when the firstDts value is not valid.
@@ -338,6 +338,30 @@ bool QVideoDecoder::getFirstPacketInformation()
 }
 
 
+void QVideoDecoder::convertFrame(){
+	currentFrame = av_frame_get_best_effort_timestamp(pFrame);
+	lastDecodedFrame = currentFrame;
+
+	// Convert and save the frame
+	img_convert_ctx = sws_getCachedContext(
+		img_convert_ctx, w, h,
+		pCodecCtx->pix_fmt, w, h,
+		AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL
+		);
+
+	if (img_convert_ctx == NULL) {
+		qDebug() << "Cannot initialize the conversion context!";
+		return;
+	}
+	sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
+
+	LastFrame = QImage(w, h, QImage::Format_RGB888);
+
+	for (int y = 0; y < h; y++)
+		memcpy(LastFrame.scanLine(y), pFrameRGB->data[0] + y * pFrameRGB->linesize[0], w * 3);
+}
+
+
 bool QVideoDecoder::AV_read_frame()
 {
 	int frame_done;
@@ -350,37 +374,16 @@ bool QVideoDecoder::AV_read_frame()
 				return false;
 			}
 
-			if (frame_done) {
-				// ...
-				// av->frame_id = packet.dts;
-				currentFrame = av_frame_get_best_effort_timestamp(pFrame);
-				lastDecodedFrame = currentFrame;
-
-				// Convert and save the frame
-				img_convert_ctx = sws_getCachedContext(
-					img_convert_ctx, w, h,
-					pCodecCtx->pix_fmt, w, h,
-					AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL
-					);
-
-				if (img_convert_ctx == NULL) {
-					qDebug() << "Cannot initialize the conversion context!";
-					return false;
-				}
-				sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize);
-
-				LastFrame = QImage(w, h, QImage::Format_RGB888);
-
-				for (int y = 0; y < h; y++)
-					memcpy(LastFrame.scanLine(y), pFrameRGB->data[0] + y * pFrameRGB->linesize[0], w * 3);
-
+			if (frame_done) {				
+				convertFrame();
 				av_packet_unref(packet);
 				return true;
 			}
 		}
 		av_packet_unref(packet);
 	}
-	return false;
+	// end of stream?
+	return flush(1);
 }
 
 
@@ -548,11 +551,30 @@ bool QVideoDecoder::seekMs(const qint64 tsms)
 }
 
 
+qint64 QVideoDecoder::getInternalFrameNumber(qint64 idealFrameNumber){
+	return idealFrameNumber*frameDuration + baseFrameNumber;
+}
+
+
+qint64 QVideoDecoder::getExternalFrameNumber(qint64 internalFrameNumber){
+	return (internalFrameNumber - baseFrameNumber) / frameDuration; 
+}
+
+
 bool QVideoDecoder::seekFrame(const qint64 idealFrameNumber){
+	qint64 frame = idealFrameNumber;
+	if (maxFrameNumber == 0)
+		maxFrameNumber = getNumFrames();
+
+	if (idealFrameNumber >= maxFrameNumber)
+		//frame = maxFrameNumber-1;
+		frame = maxFrameNumber;
+		//return false;
+	
 	if(frameDuration>1)
-		return seekFrameCorrect(idealFrameNumber*frameDuration + baseFrameNumber, 10*frameDuration);
+		return seekFrameCorrect(getInternalFrameNumber(frame), 10 * frameDuration);
 	else
-		return seekFrameCorrect(idealFrameNumber*frameDuration + baseFrameNumber);
+		return seekFrameCorrect(getInternalFrameNumber(frame));
 }
 
 
@@ -565,10 +587,20 @@ bool QVideoDecoder::seekFrame(const qint64 idealFrameNumber){
 *   @see seekToAndGetFrame()
 *   @see seekMs()
 */
-bool QVideoDecoder::seekFrameCorrect(const qint64 frame, const qint64 delta)
+bool QVideoDecoder::seekFrameCorrect(const qint64 internalFrame, const qint64 delta)
 {
-	
-	int64_t framePts = av_frame_get_best_effort_timestamp(pFrame);
+	qint64 frame = internalFrame;
+	if (maxCurrentFrameNumber == 0)
+		maxCurrentFrameNumber = getInternalFrameNumber(getNumFrames());
+
+	if (internalFrame >= maxCurrentFrameNumber)
+		frame = getInternalFrameNumber(getNumFrames()-1);
+
+	// end of stream
+	if (flushed && getInternalFrameNumber(getNumFrames() - 1) == currentFrame)
+		return true;
+
+	int64_t framePts = currentFrame;
 	int64_t frame_delta = frame - framePts;
 	frame_delta /= frameDuration;
 
@@ -664,10 +696,13 @@ bool QVideoDecoder::getFrame(QImage &img, qint64 *frameNum, qint64 *frameTime)
 
 	if (frameNum)
 		//*frameNum = currentFrame-baseFrameNumber;
-		*frameNum = (lastDecodedFrame - baseFrameNumber)/frameDuration;
-	if (frameTime)
+		*frameNum = getExternalFrameNumber(lastDecodedFrame);
+	if (frameTime){
 		//*frameTime = (currentFrame - baseFrameNumber)*baseFrameRate;
-		*frameTime = (lastDecodedFrame - baseFrameNumber) / frameDuration*baseFrameRate;
+		qint64 DesiredFrameNumber = getExternalFrameNumber(lastDecodedFrame);
+		qint64 time = DesiredFrameNumber * frameMSec;
+		*frameTime = time;
+	}
 	return true;
 }
 
@@ -682,7 +717,7 @@ qint64 QVideoDecoder::getActualFrameNumber()
 {
 	//if (!isOk())
 	//	return -1;
-	return (lastDecodedFrame - baseFrameNumber) / frameDuration;
+	return getExternalFrameNumber(lastDecodedFrame);
 }
 
 /*! \brief Get last loaded frame "IDEAL number"
@@ -696,7 +731,7 @@ qint64 QVideoDecoder::getIdealFrameNumber()
 {
 	//if (!isOk())
 	//	return -1;
-	return (currentFrame - baseFrameNumber) / frameDuration;
+	return getExternalFrameNumber(currentFrame);
 }
 
 /*! \brief Get last loaded frame time milliseconds
@@ -708,7 +743,10 @@ qint64 QVideoDecoder::getFrameTime()
 {
 	if (!isOk())
 		return -1;
-	return (currentFrame - baseFrameNumber) / frameDuration *baseFrameRate;
+	qint64 DesiredFrameNumber = getExternalFrameNumber(lastDecodedFrame);
+	qint64 time = DesiredFrameNumber * frameMSec;
+	return time;
+	// return (lastDecodedFrame - baseFrameNumber) / frameDuration *baseFrameRate;
 }
 
 /*! \brief Get frame number by time
@@ -722,20 +760,19 @@ qint64 QVideoDecoder::getNumFrameByTime(const qint64 tsms)
 		return false;
 	if (tsms <= 0)
 		return 0;
-	return round(tsms / frameMSec);
-
-	/*int64_t DesiredFrameNumber = av_rescale(tsms, pFormatCtx->streams[videoStreamIndex]->time_base.den, pFormatCtx->streams[videoStreamIndex]->time_base.num);
+	//return round(tsms / frameMSec);
+	
+	int64_t DesiredFrameNumber = av_rescale(tsms, pFormatCtx->streams[videoStreamIndex]->time_base.den, pFormatCtx->streams[videoStreamIndex]->time_base.num);
 	DesiredFrameNumber /= 1000;
 
-	qint64 target = DesiredFrameNumber *
+	/*qint64 target = DesiredFrameNumber *
 		(pFormatCtx->streams[videoStreamIndex]->time_base.den /
 		pFormatCtx->streams[videoStreamIndex]->time_base.num) /
 		(pFormatCtx->streams[videoStreamIndex]->codec->time_base.den /
 		pFormatCtx->streams[videoStreamIndex]->codec->time_base.num)*
-		pCodecCtx->ticks_per_frame;
+		pCodecCtx->ticks_per_frame;*/
 
-	target = std::max(qint64(0), qint64((target - baseFrameNumber) / frameDuration));
-	return target;*/
+	return round(std::max(0.0, (DesiredFrameNumber - baseFrameNumber) / frameDuration));
 }
 
 /*! \brief Get video duration in milliseconds
@@ -762,7 +799,8 @@ qint64 QVideoDecoder::getVideoLengthMs()
 */
 qint64 QVideoDecoder::getNumFrames()
 {
-	return round(getVideoLengthMs() * (baseFrameRate / 1000.0));
+	//return round(getVideoLengthMs() * (baseFrameRate / 1000.0));
+	return getNumFrameByTime(getVideoLengthMs());
 }
 
 /*! \brief Get video path
