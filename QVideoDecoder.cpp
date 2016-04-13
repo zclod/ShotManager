@@ -248,12 +248,11 @@ bool QVideoDecoder::openFile(const QString filename)
 	h				= pCodecCtx->height;
 	
 	ok = true;
-	dumpFormat(0);
-
-	
 	
 	getFirstPacketInformation();
 	//AV_read_frame();
+
+	dumpFormat(0);
 
 	maxFrameNumber = getNumFrames();
 	maxCurrentFrameNumber = getInternalFrameNumber(maxFrameNumber);
