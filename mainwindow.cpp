@@ -14,6 +14,12 @@
 #include <QtWidgets/QSizeGrip>
 #include <QMouseEvent>
 
+/////
+
+#include <iostream>
+#include <fstream>
+
+
 
 /*! \brief Create and setup a new MainWindow
 *
@@ -64,6 +70,16 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(menubar->actionLoad_File, SIGNAL(triggered()), this, SLOT(on_markersLoadBtn_clicked()));
 	connect(menubar->actionStart_StartEnd_Marker, SIGNAL(triggered()), this, SLOT(on_startMarkerBtn_clicked()));
 	connect(menubar->actionEnd_Marker, SIGNAL(triggered()), this, SLOT(on_endMarkerBtn_clicked()));
+	// External tool
+	// Shot detector
+	// 
+
+
+	connect(menubar->actionShotDetectorAnalizeInputVideo, SIGNAL(triggered()), this, SLOT(RunShotDetectorAnalizeInputVideo()));
+	connect(menubar->actionShotDetectorPerformanceEvaluationVideo, SIGNAL(triggered()), this, SLOT(RunShotDetectorPerformanceEvaluationVideo()));
+	connect(menubar->actionShotDetectorComparisonWithOtherAlgorithms, SIGNAL(triggered()), this, SLOT(RunShotDetectorComparisonWithOtherAlgorithms()));
+	connect(menubar->actionShotDetectorCachingOfMnWValues, SIGNAL(triggered()), this, SLOT(RunShotDetectorCachingOfMnWValues()));
+
 	// Help
 	connect(menubar->actionManual, SIGNAL(triggered()), this, SLOT(showManual()));
 	connect(menubar->actionAbout, SIGNAL(triggered()), this, SLOT(showAbout()));
@@ -163,6 +179,69 @@ void MainWindow::showInfo()
 
 	infoDialog->setLayout(base);
 	infoDialog->show();
+}
+
+std::string ComposeRunString(std::string programpathname, std::string currFilName, std::string maximumwindowsize, std::string elabmode);
+/*
+A - analyze the input video
+P - Performance evaluation
+C - Comparison with other algorithms
+M - Caching of M^n_w values
+*/
+void MainWindow::RunShotDetectorPerformanceEvaluationVideo()
+{
+	if (_currFilName.trimmed() == "") return;
+
+	std::string str = ComposeRunString("start ./ShotDetector/ilsd.exe ", _currFilName.toStdString(), "3", "P");
+	const char* runexe = str.c_str();
+
+	system(runexe);
+}
+void MainWindow::RunShotDetectorComparisonWithOtherAlgorithms()
+{
+	if (_currFilName.trimmed() == "") return;
+
+	std::string str = ComposeRunString("start ./ShotDetector/ilsd.exe", _currFilName.toStdString(), "3", "C");
+	const char* runexe = str.c_str();
+
+	system(runexe);
+}
+void MainWindow::RunShotDetectorCachingOfMnWValues()
+{
+	if (_currFilName.trimmed() == "") return;
+
+	std::string str = ComposeRunString("start ./ShotDetector/ilsd.exe", _currFilName.toStdString(), "3", "M");
+	const char* runexe = str.c_str();
+
+	system(runexe);
+}
+void MainWindow::RunShotDetectorAnalizeInputVideo()
+{
+
+	if (_currFilName.trimmed() == "") return;
+
+	std::string str = ComposeRunString("start ./ShotDetector/ilsd.exe", _currFilName.toStdString(), "3", "A");
+	const char* runexe = str.c_str();
+
+	system(runexe);
+
+}
+
+std::string ComposeRunString(std::string programpathname, std::string currFilName, std::string maximumwindowsize, std::string elabmode)
+{
+	std::string strToolShotDetectorExe = "";
+	strToolShotDetectorExe.append(programpathname);
+	strToolShotDetectorExe.append(" ");
+	strToolShotDetectorExe.append(currFilName);
+	strToolShotDetectorExe.append(" ");
+	std::string strMaximumWindowSize = maximumwindowsize;
+	strToolShotDetectorExe.append(" ");
+	strToolShotDetectorExe.append(strMaximumWindowSize);
+	strToolShotDetectorExe.append(" ");
+	std::string strElabMode = elabmode;
+	strToolShotDetectorExe.append(strElabMode);
+	return strToolShotDetectorExe;
+	  
 }
 
 /*! \brief Open a dialog with video infos
@@ -471,6 +550,7 @@ void MainWindow::on_actionLoad_video_triggered()
 	QString fileName = QFileDialog::getOpenFileName(this, "Load Video",QString(),"Video (*.avi *.asf *.mpg *.wmv *.mkv *.mp4)");
 	if (!fileName.isNull())
 	{
+		_currFilName = fileName;
 		ui->videoSlider->setValue(0);
 		_playerWidg->loadVideo(fileName);
 		_prevWidg->setupPreviews();

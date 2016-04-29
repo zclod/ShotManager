@@ -35,6 +35,19 @@ public:
 	QAction* actionStart_StartEnd_Marker;
 	QAction* actionEnd_Marker;
 
+	/*
+	A - analyze the input video
+	P - Performance evaluation
+	C - Comparison with other algorithms
+	M - Caching of M^n_w values
+	*/
+	//	 ShotDetector
+	QAction* actionShotDetectorAnalizeInputVideo;
+	QAction* actionShotDetectorPerformanceEvaluationVideo;
+	QAction* actionShotDetectorComparisonWithOtherAlgorithms;
+	QAction* actionShotDetectorCachingOfMnWValues;
+	
+
 	//	 Help
 	QAction* actionManual;
 	QAction* actionAbout;

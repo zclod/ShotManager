@@ -59,6 +59,19 @@ MenuBar::MenuBar(QWidget *parent) : QMenuBar(parent)
 	menuMarkers->addAction(actionStart_StartEnd_Marker);
 	menuMarkers->addAction(actionEnd_Marker);
 
+	//	 ShotDetector
+	QMenu* menuExternalTool = new QMenu("Tool", this);
+	actionShotDetectorAnalizeInputVideo = new QAction("Shot Detector - Analize input video", menuExternalTool);
+	actionShotDetectorPerformanceEvaluationVideo = new QAction("Shot Detector - Performance Evaluation Video", menuExternalTool);
+	actionShotDetectorComparisonWithOtherAlgorithms = new QAction("Shot Detector - Comparison with other algorithms", menuExternalTool);
+	actionShotDetectorCachingOfMnWValues = new QAction("Shot Detector - Caching of Mnw values", menuExternalTool);
+
+	menuExternalTool->addAction(actionShotDetectorAnalizeInputVideo);
+	menuExternalTool->addAction(actionShotDetectorPerformanceEvaluationVideo);
+	menuExternalTool->addAction(actionShotDetectorComparisonWithOtherAlgorithms);
+	menuExternalTool->addAction(actionShotDetectorCachingOfMnWValues);
+
+
 	//	 Help
 	QMenu* menuHelp	= new QMenu("Help", this);
 	actionManual	= new QAction("Manual", menuHelp);
@@ -70,6 +83,7 @@ MenuBar::MenuBar(QWidget *parent) : QMenuBar(parent)
 	addMenu(menuFile);
 	addMenu(menuVideo);
 	addMenu(menuMarkers);
+	addMenu(menuExternalTool);
 	addMenu(menuHelp);
     setMaximumHeight(28);
 }

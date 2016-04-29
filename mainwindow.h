@@ -61,6 +61,8 @@ private:
 	QPixmap startMarkerIcon;
 	QPixmap endStartMarkerIcon;
 
+	QString _currFilName;
+
 	//	Title bar
 	QPoint	mClickedPos;
 	bool	mMousePressed;
@@ -91,6 +93,12 @@ public slots:
 	void changeStartEndBtn(const bool markerStarted);
 
 private slots:
+
+	// External Tool
+	void RunShotDetectorAnalizeInputVideo();
+	void RunShotDetectorPerformanceEvaluationVideo();
+	void RunShotDetectorComparisonWithOtherAlgorithms();
+	void RunShotDetectorCachingOfMnWValues();
 
 	void showAbout();
 	void showManual();
@@ -127,6 +135,8 @@ private slots:
 	void on_markersTableWidget_itemSelectionChanged();
 
 	void on_infoBtn_clicked();
+
+	
 };
 
 #endif // MAINWINDOW_H
