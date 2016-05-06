@@ -4,7 +4,7 @@
 /GeneratedFiles/
 /doxygen/
 *.rc
-*.sln
+#*.sln
 *.vcxproj
 *.filters
 
