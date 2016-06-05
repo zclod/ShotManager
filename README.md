@@ -93,6 +93,9 @@ Moreover, the overlaps between markers's range are highlighted with a red backgr
 
 
 ## 4. CODERS
+* Luca Gallinari
+* Dario Stabili
+* Marco Ravazzini
 * Claudio Zanasi
 * Marco Venturelli
-
+* Alberto Franzaroli 
