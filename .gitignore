@@ -18,9 +18,9 @@
 *.userprefs
 
 # Build results
-[Dd]ebug/
+#[Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
+#[Rr]elease/
 [Rr]eleases/
 x64/
 x86/
@@ -73,6 +73,8 @@ TestResult.xml
 #*.lib
 
 # Executables
-# *.exe
+*.exe
 *.out
 *.app
+*.ilk
+*.pdb

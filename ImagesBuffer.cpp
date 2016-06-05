@@ -213,6 +213,9 @@ bool ImagesBuffer::fillBuffer(
 		return false;
 	}
 
+	if (endofstream)
+		return false;
+
     // dumpBuffer();
 	return true;
 }

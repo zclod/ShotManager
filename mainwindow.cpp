@@ -110,7 +110,8 @@ void MainWindow::showInfo()
 {
 	QDialog *infoDialog = new QDialog(this);
 	infoDialog->setStyleSheet("color:#222;");
-	infoDialog->setFixedSize(QSize(400, 200));
+	//infoDialog->setFixedSize(QSize(400, 200));
+	infoDialog->setFixedSize(QSize(450, 300));
 
 	QGridLayout *base = new QGridLayout();
 

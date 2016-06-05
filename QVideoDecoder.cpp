@@ -45,6 +45,7 @@
 
 #include <locale>
 #include <algorithm>
+#include <QMessageBox>
 
 #define __STDC_CONSTANT_MACROS
 
@@ -122,7 +123,8 @@ void QVideoDecoder::InitVars()
 void QVideoDecoder::close()
 {
 	/*if(!ok)
-		return;*/
+		return;	*/
+
 	flushed = false;
 
 	// Free the RGB image
@@ -247,12 +249,11 @@ bool QVideoDecoder::openFile(const QString filename)
 	h				= pCodecCtx->height;
 	
 	ok = true;
-	dumpFormat(0);
-
-	
 	
 	getFirstPacketInformation();
 	//AV_read_frame();
+
+	dumpFormat(0);
 
 	maxFrameNumber = getNumFrames();
 	maxCurrentFrameNumber = getInternalFrameNumber(maxFrameNumber);
@@ -317,6 +318,11 @@ bool QVideoDecoder::getFirstPacketInformation()
 				startTs = packet->dts;
 				done = true;
 
+				double frameMSecRealRounded = std::round(std::round(frameMSecReal * 100) / 100);
+				if (frameDuration != frameMSecRealRounded){
+					frameDuration = frameMSecRealRounded;
+				}
+
 				// Convert and save the frame
 				convertFrame();
 
@@ -371,6 +377,12 @@ bool QVideoDecoder::AV_read_frame()
 			int ret = avcodec_decode_video2(pCodecCtx, pFrame, &frame_done, packet);
 			if (ret < 0){
 				printf("Decode Error.\n");
+				return false;
+			}
+
+			if (packet->duration != frameDuration){
+				QMessageBox::critical(NULL, "Codec Error", "Video format is not supported. Frame rate is not costant");
+				ok = false;
 				return false;
 			}
 
@@ -552,12 +564,12 @@ bool QVideoDecoder::seekMs(const qint64 tsms)
 
 
 qint64 QVideoDecoder::getInternalFrameNumber(qint64 idealFrameNumber){
-	return idealFrameNumber*frameDuration + baseFrameNumber;
+	return std::round(idealFrameNumber*frameDuration + baseFrameNumber);
 }
 
 
 qint64 QVideoDecoder::getExternalFrameNumber(qint64 internalFrameNumber){
-	return (internalFrameNumber - baseFrameNumber) / frameDuration; 
+	return std::round((internalFrameNumber - baseFrameNumber) / frameDuration); 
 }
 
 
