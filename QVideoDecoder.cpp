@@ -610,7 +610,7 @@ bool QVideoDecoder::seekFrameCorrect(const qint64 internalFrame, const qint64 de
 
 	// end of stream
 	if (flushed && getInternalFrameNumber(getNumFrames() - 1) == currentFrame)
-		return true;
+		return false;
 
 	int64_t framePts = currentFrame;
 	int64_t frame_delta = frame - framePts;
@@ -693,6 +693,17 @@ bool QVideoDecoder::isOk()
 {
 	return ok;
 }
+
+/*! \brief Reached end of file
+*
+*   Reached end of file
+*	@return video loaded successfully
+*/
+bool QVideoDecoder::isFlushed()
+{
+	return flushed;
+}
+
 
 /*! \brief Get last loaded frame
 *

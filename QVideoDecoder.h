@@ -166,6 +166,7 @@ class QVideoDecoder
 		virtual qint64 getNumFrameByTime(const qint64 tsms);
 
 		virtual bool isOk();
+		virtual bool isFlushed();
 
 		qint64				getVideoLengthMs();
 		qint64				getNumFrames();

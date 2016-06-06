@@ -111,6 +111,9 @@ bool ImagesBuffer::seekToFrame(const qint64 num)
 	if (!isVideoLoaded())
 		return false;
 
+	if (_decoder.isFlushed())
+		_decoder.openFile(_decoder.getPath());
+
 	if (_buffer.size() != 0) {
 		if (_buffer[_mid].num == num) // already set
 			return true;
