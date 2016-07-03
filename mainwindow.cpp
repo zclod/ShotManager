@@ -76,9 +76,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 	connect(menubar->actionShotDetectorAnalizeInputVideo, SIGNAL(triggered()), this, SLOT(RunShotDetectorAnalizeInputVideo()));
-	connect(menubar->actionShotDetectorPerformanceEvaluationVideo, SIGNAL(triggered()), this, SLOT(RunShotDetectorPerformanceEvaluationVideo()));
+	/*connect(menubar->actionShotDetectorPerformanceEvaluationVideo, SIGNAL(triggered()), this, SLOT(RunShotDetectorPerformanceEvaluationVideo()));
 	connect(menubar->actionShotDetectorComparisonWithOtherAlgorithms, SIGNAL(triggered()), this, SLOT(RunShotDetectorComparisonWithOtherAlgorithms()));
-	connect(menubar->actionShotDetectorCachingOfMnWValues, SIGNAL(triggered()), this, SLOT(RunShotDetectorCachingOfMnWValues()));
+	connect(menubar->actionShotDetectorCachingOfMnWValues, SIGNAL(triggered()), this, SLOT(RunShotDetectorCachingOfMnWValues()));*/
 
 	// Help
 	connect(menubar->actionManual, SIGNAL(triggered()), this, SLOT(showManual()));
@@ -220,10 +220,29 @@ void MainWindow::RunShotDetectorAnalizeInputVideo()
 
 	if (_currFilName.trimmed() == "") return;
 
-	std::string str = ComposeRunString("start ./ShotDetector/ilsd.exe", _currFilName.toStdString(), "3", "A");
-	const char* runexe = str.c_str();
+	//std::string str = ComposeRunString("start ./ShotDetector/ilsd.exe", _currFilName.toStdString(), "3", "A");
+	//const char* runexe = str.c_str();
 
-	system(runexe);
+	//system(runexe);
+
+	QObject *parent;
+    
+    QString program = "./ShotDetector/ilsd.exe";
+    QStringList arguments;
+	QString filename = _currFilName;
+    arguments << filename << "3";
+
+	parent = this;
+    QProcess *myProcess = new QProcess(parent);
+    myProcess->start(program, arguments);
+
+	if (!myProcess->waitForStarted())
+		return;
+
+	if (!myProcess->waitForFinished())
+		return;
+
+
 
 }
 

@@ -61,15 +61,18 @@ MenuBar::MenuBar(QWidget *parent) : QMenuBar(parent)
 
 	//	 ShotDetector
 	QMenu* menuExternalTool = new QMenu("Tool", this);
-	actionShotDetectorAnalizeInputVideo = new QAction("Shot Detector - Analize input video", menuExternalTool);
+
+	actionShotDetectorAnalizeInputVideo = new QAction("Shot Detector", menuExternalTool);
+
+	/*actionShotDetectorAnalizeInputVideo = new QAction("Shot Detector - Analize input video", menuExternalTool);
 	actionShotDetectorPerformanceEvaluationVideo = new QAction("Shot Detector - Performance Evaluation Video", menuExternalTool);
 	actionShotDetectorComparisonWithOtherAlgorithms = new QAction("Shot Detector - Comparison with other algorithms", menuExternalTool);
-	actionShotDetectorCachingOfMnWValues = new QAction("Shot Detector - Caching of Mnw values", menuExternalTool);
+	actionShotDetectorCachingOfMnWValues = new QAction("Shot Detector - Caching of Mnw values", menuExternalTool);*/
 
 	menuExternalTool->addAction(actionShotDetectorAnalizeInputVideo);
-	menuExternalTool->addAction(actionShotDetectorPerformanceEvaluationVideo);
+	/*menuExternalTool->addAction(actionShotDetectorPerformanceEvaluationVideo);
 	menuExternalTool->addAction(actionShotDetectorComparisonWithOtherAlgorithms);
-	menuExternalTool->addAction(actionShotDetectorCachingOfMnWValues);
+	menuExternalTool->addAction(actionShotDetectorCachingOfMnWValues);*/
 
 
 	//	 Help
