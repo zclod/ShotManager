@@ -43,9 +43,9 @@ public:
 	*/
 	//	 ShotDetector
 	QAction* actionShotDetectorAnalizeInputVideo;
-	QAction* actionShotDetectorPerformanceEvaluationVideo;
+	/*QAction* actionShotDetectorPerformanceEvaluationVideo;
 	QAction* actionShotDetectorComparisonWithOtherAlgorithms;
-	QAction* actionShotDetectorCachingOfMnWValues;
+	QAction* actionShotDetectorCachingOfMnWValues;*/
 	
 
 	//	 Help
